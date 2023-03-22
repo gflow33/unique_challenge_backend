@@ -2,6 +2,14 @@ import { generateAccount, SignatureType } from '@unique-nft/accounts';
 import express, {Express, Request, Response} from 'express';
 import { Sdk } from '@unique-nft/sdk';
 import { KeyringProvider } from '@unique-nft/accounts/keyring';
+//import { CreateTokenNewArguments } from '@unique-nft/substrate-client/tokens/types';
+/*import {
+    UniqueCollectionSchemaToCreate,
+    COLLECTION_SCHEMA_NAME,
+    AttributeType,
+} from '@unique-nft/substrate-client/tokens';*/
+import { TransferArguments } from '@unique-nft/substrate-client/tokens';
+
 const bareUrl = "https://rest.unique.network/opal/v1";
 
 
@@ -30,6 +38,22 @@ export async function createCollection(sdk, address) {
   const { collectionId } = parsed;
 
   return sdk.collections.get({ collectionId });
+}
+
+export async function createToken(sdk, address, collectionId) {
+  const { parsed, error } = await sdk.tokens.create.submitWaitResult({
+    address,
+    collectionId,
+  });
+
+  if (error) {
+    console.log('create token error', error);
+    process.exit();
+  }
+
+  const { tokenId } = parsed;
+
+  return sdk.tokens.get({ collectionId, tokenId });
 }
 
 app.get('/', (req: Request, res: Response)=>{
@@ -66,5 +90,34 @@ app.get('/create-collection', async (req, res) => {
   const sdk = createSdk(signer);
 
   const collection = await createCollection(sdk, address);
-  console.log('Сollection was create. ID: ', collection);
+  console.log('Сollection was created. ID: ', collection);
 });
+
+app.get('/create-token', async (req, res) => {
+  const mnemonic: any = req.query.mnemonic
+  const signer = await KeyringProvider.fromMnemonic(mnemonic);
+  const address = signer.instance.address;
+
+  const sdk = createSdk(signer);
+
+  const collection = await createCollection(sdk, address);
+  console.log('collection', collection);
+
+  const token = await createToken(sdk, address, collection.id);
+  console.log('token', token);
+});
+
+app.get('/transfer-token', async (req, res) => {
+  const args: TransferArguments = {
+    address: '<address>',
+    to: '<address>',
+    collectionId: 1,
+    tokenId: 1,
+  };
+  const mnemonic: any = req.query.mnemonic
+  const signer = await KeyringProvider.fromMnemonic(mnemonic);
+  const sdk = createSdk(signer);
+  const result = await sdk.tokens.transfer.submitWaitResult(args);
+  
+  console.log(result.parsed);
+})
