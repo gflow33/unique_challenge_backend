@@ -14,7 +14,10 @@
     "@unique-nft/accounts": "^0.3.4",
     "@unique-nft/sdk": "^0.2.5",
     "@unique-nft/substrate-client": "^0.8.0",
+    "axios": "^1.3.4",
     "express": "^4.18.2",
+    "express-graphql": "^0.12.0",
+    "graphql": "^15.8.0",
     "typescript": "^5.0.2"
   },
   "devDependencies": {
